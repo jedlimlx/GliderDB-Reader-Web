@@ -1,4 +1,6 @@
-# gliderdb-searcher
+# GliderDB Reader
+
+Built with Vue 3. Supports only 5S and SOSSP at the moment. GliderDB functionality will follow shortly.
 
 ## Project setup
 ```
