@@ -1,3 +1,3 @@
 module.exports = {
-    publicPath: '/GliderDB/'
+    publicPath: '/GliderDB-Reader-Web/'
 }
