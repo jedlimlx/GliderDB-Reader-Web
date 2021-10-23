@@ -54,10 +54,11 @@ import orthogonal from '!raw-loader!./assets/orthogonal.sss.txt'
 import r1_moore_gliders from '!raw-loader!./assets/R1-C2-NM-gliders.db.txt'
 import r1_moore_oscillators from '!raw-loader!./assets/R1-C2-NM-oscillators.db.txt'
 import r1_c3_moore_gliders from '!raw-loader!./assets/R1-C3-NM-gliders.db.txt'
-import r2_moore_gliders from '!raw-loader!./assets/R1-C3-NM-gliders.db.txt'
+import r2_moore_gliders from '!raw-loader!./assets/R2-C2-NM-gliders.db.txt'
+import r2_moore_oscillators from '!raw-loader!./assets/R2-C2-NM-oscillators.db.txt'
 
 import r1_neumann_gliders from '!raw-loader!./assets/R1-C2-NN-gliders.db.txt'
-import r2_neumann_gliders from '!raw-loader!./assets/R1-C3-NM-gliders.db.txt'
+import r2_neumann_gliders from '!raw-loader!./assets/R2-C2-NN-gliders.db.txt'
 
 export default {
     name: 'App',
@@ -172,6 +173,38 @@ export default {
                         break
                     default: neighbourhood = "M"
                 }
+            } else if (/^R[0-9]+,C[0-9]+,S(((\d,(?=\d))|(\d-(?=\d))|\d)+)?,B(((\d,(?=\d))|(\d-(?=\d))|\d)+)?,N[ABbCGHLMNX23*+#]$/.test(rule)) {
+                let tokens = rule.split(",")
+                range = parseInt(tokens[0].replace("R", ""))
+                numStates = parseInt(tokens[1].replace("C", ""))
+                neighbourhood = tokens[tokens.length - 1].replace("N", "")
+
+                survival = new Set()
+                tokens = rule.match(/S(((\d,(?=\d))|(\d-(?=\d))|\d)+)?/)[0].replace("S", "").split(",")
+                    .forEach(ele => {
+                        if (/^\d+$/.test(ele)) {
+                            survival.add(parseInt(ele))
+                        } else {
+                            for (let i = parseInt(ele.split("-")[0]); i <= parseInt(ele.split("-")[1]); i++)
+                                survival.add(i)
+                        }
+                    })
+
+                birth = new Set()
+                tokens = rule.match(/B(((\d,(?=\d))|(\d-(?=\d))|\d)+)?/)[0].replace("B", "").split(",")
+                    .forEach(ele => {
+                        if (/^\d+$/.test(ele)) {
+                            birth.add(parseInt(ele))
+                        } else {
+                            for (let i = parseInt(ele.split("-")[0]); i <= parseInt(ele.split("-")[1]); i++)
+                                birth.add(i)
+                        }
+                    })
+            } else {
+                this.title = "Error"
+                this.message = `"${this.rule}" is not a valid rule`
+                this.showModal = !this.showModal
+                return
             }
 
             return [range, numStates, neighbourhood, birth, survival]
@@ -206,6 +239,7 @@ export default {
             const parsedRule = this.parseRule(this.rule)
             const range = parsedRule[0], numStates = parsedRule[1], neighbourhood = parsedRule[2],
                 birth = parsedRule[3], survival = parsedRule[4]
+            console.log(range, numStates, neighbourhood, birth, survival)
 
             // Choose the correct database
             let database_name = ""
@@ -214,6 +248,7 @@ export default {
                 "R1-C2-NM-oscillators": r1_moore_oscillators,
                 "R1-C3-NM-gliders": r1_c3_moore_gliders,
                 "R2-C2-NM-gliders": r2_moore_gliders,
+                "R2-C2-NM-oscillators": r2_moore_oscillators,
                 "R1-C2-NN-gliders": r1_neumann_gliders,
                 "R2-C2-NN-gliders": r2_neumann_gliders
             }
@@ -223,7 +258,6 @@ export default {
             let db = db_lookup[database_name]
 
             // Linear Search
-            console.log(database_name)
             let tokens, minRule, maxRule
             let entries = db.split("\n")
             this.gliders = []
@@ -255,7 +289,7 @@ export default {
                                 (tokens[1] !== "" ? `#C Discovered by: ${tokens[1]}\n` : '') +
                                 `#C Min Rule: ${tokens[2]}\n` +
                                 `#C Max Rule: ${tokens[3]}\n` +
-                                `x = ${tokens[7]}, y = ${tokens[8]}, rule = ${this.rule}\n` +
+                                `x = ${tokens[7]}, y = ${tokens[8]}, rule = ${this.ignoreRule ? tokens[2] : this.rule}\n` +
                                 this.insertNewLine(tokens[9], 100)
                         })
                     }
